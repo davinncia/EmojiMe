@@ -1,11 +1,14 @@
 package com.davinciapp.emojime
 
+import android.app.Application
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.view.WindowManager
 import android.widget.Toast
@@ -83,6 +86,34 @@ class BitmapUtils {
         return deleted
     }
 
+    //MEDIA STORE
+    suspend fun saveImageInMediaStore(pic: Bitmap, application: Application): String? {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, timeStamp)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+        }
+
+        val resolver = application.contentResolver
+
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+
+        uri?.let {
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                pic.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                outputStream.close()
+            }
+
+            resolver.update(uri, values, null, null)
+            Toast.makeText(application, "Saved to: $uri", Toast.LENGTH_SHORT).show()
+
+        } ?: throw RuntimeException("MediaStore failed.")
+
+        return uri.toString()
+    }
+
+/*
     //Helper method for saving the image
     fun saveImage(context: Context, image: Bitmap): String? {
         //TODO: MediaStore
@@ -137,5 +168,7 @@ class BitmapUtils {
         mediaScanIntent.data = contentUri
         context.sendBroadcast(mediaScanIntent)
     }
+
+ */
 
 }

@@ -10,7 +10,7 @@ class ViewModelFactory private constructor(private val application: Application)
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         when {
             modelClass.isAssignableFrom(MainViewModel::class.java) -> {
-                return MainViewModel(application, BitmapUtils()) as T
+                return MainViewModel(application, BitmapUtils(), Emojifier.getInstance(application)) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class")
         }

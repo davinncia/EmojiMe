@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
@@ -43,20 +44,33 @@ class MainActivity : AppCompatActivity() {
         viewModel.photo.observe(this, Observer {
             // Set the new bitmap to the ImageView
             imageView.setImageBitmap(it)
+            Toast.makeText(this, "Inspecting image...", Toast.LENGTH_LONG).show()
+            viewModel.detectFaces()
+
+        })
+
+        viewModel.faces.observe(this, Observer {
+            Toast.makeText(this, "$it faces detected o_o", Toast.LENGTH_SHORT).show()
         })
 
         cameraBtn.setOnClickListener { checkStoragePermission() }
-        clearFab.setOnClickListener { clearImage() }
-        saveFab.setOnClickListener {  }
+        clearFab.setOnClickListener {
+            clearImageFromView()
+            // Delete the temporary image file
+            viewModel.deleteImageFile()
+        }
+
+        saveFab.setOnClickListener {
+            viewModel.saveImage()
+            clearImageFromView()
+        }
 
     }
 
     private fun launchCamera() {
         Toast.makeText(this, "Yep", Toast.LENGTH_SHORT).show()
 
-
         //Creates a temporary image file and captures a picture to store in it.
-
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         // Ensure that there's a camera activity to handle the intent
@@ -71,10 +85,6 @@ class MainActivity : AppCompatActivity() {
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-
-                // Get the path of the temporary file
-                viewModel.setTempPhotoPath(photoFile.absolutePath)
-
                 // Get the content URI for the image file
                 val photoURI: Uri =
                     FileProvider.getUriForFile(this, FILE_PROVIDER_AUTHORITY, photoFile)
@@ -108,25 +118,17 @@ class MainActivity : AppCompatActivity() {
         clearFab.visibility = View.VISIBLE;
 
         // Resample the saved image to fit the ImageView
-        val resultsBitmap = viewModel.processPic()
+        viewModel.processPic()
 
-        // Detect the faces and overlay the appropriate emoji
-        //resultsBitmap = Emojifier.detectFacesandOverlayEmoji(this, mResultsBitmap);
-
-        // Set the new bitmap to the ImageView
-        //imageView.setImageBitmap(resultsBitmap)
     }
 
 
-    fun clearImage() {
+    private fun clearImageFromView() {
         // Clear the image and toggle the view visibility
         imageView.setImageResource(0)
         cameraBtn.visibility = View.VISIBLE
         clearFab.visibility = View.GONE
         saveFab.visibility = View.GONE
-
-        // Delete the temporary image file
-        viewModel.deleteImageFile()
     }
 
     private fun launchShareActivity() {

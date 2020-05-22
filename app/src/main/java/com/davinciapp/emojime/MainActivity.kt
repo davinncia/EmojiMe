@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: MainViewModel
 
-    private val cameraBtn by bind<Button>(R.id.btn_camera)
     private val imageView by bind<ImageView>(R.id.iv_picture)
     private val clearFab by bind<FloatingActionButton>(R.id.clear_button)
     private val saveFab by bind<FloatingActionButton>(R.id.save_button)
@@ -49,11 +48,10 @@ class MainActivity : AppCompatActivity() {
 
         })
 
-        viewModel.faces.observe(this, Observer {
-            Toast.makeText(this, "$it faces detected o_o", Toast.LENGTH_SHORT).show()
+        viewModel.emojiPhoto.observe(this, Observer {
+            imageView.setImageBitmap(it)
         })
 
-        cameraBtn.setOnClickListener { checkStoragePermission() }
         clearFab.setOnClickListener {
             clearImageFromView()
             // Delete the temporary image file
@@ -64,6 +62,8 @@ class MainActivity : AppCompatActivity() {
             viewModel.saveImage()
             clearImageFromView()
         }
+
+        checkStoragePermission()
 
     }
 
@@ -111,24 +111,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun processAndSetImage() {
-
         // Toggle Visibility of the views
-        cameraBtn.visibility = View.GONE;
         saveFab.visibility = View.VISIBLE;
         clearFab.visibility = View.VISIBLE;
 
         // Resample the saved image to fit the ImageView
         viewModel.processPic()
-
     }
 
 
     private fun clearImageFromView() {
         // Clear the image and toggle the view visibility
         imageView.setImageResource(0)
-        cameraBtn.visibility = View.VISIBLE
         clearFab.visibility = View.GONE
         saveFab.visibility = View.GONE
+        checkStoragePermission() //Launches camera if granted
     }
 
     private fun launchShareActivity() {
@@ -178,7 +175,7 @@ class MainActivity : AppCompatActivity() {
                     launchCamera()
                 } else {
                     //Denied, boo!
-                    //TODO: View
+                    finish()
                 }
                 return
             }

@@ -43,7 +43,6 @@ class BitmapUtils {
     }
 
 
-
     //Resamples the captured photo to fit the screen for better memory usage.
     fun resamplePic(context: Context, imagePath: String): Bitmap {
 
@@ -87,7 +86,7 @@ class BitmapUtils {
     }
 
     //MEDIA STORE
-    suspend fun saveImageInMediaStore(pic: Bitmap, application: Application): String? {
+    fun saveImageInMediaStore(pic: Bitmap, application: Application): String? {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
 
         val values = ContentValues().apply {
@@ -101,7 +100,7 @@ class BitmapUtils {
 
         uri?.let {
             resolver.openOutputStream(uri)?.use { outputStream ->
-                pic.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                pic.compress(Bitmap.CompressFormat.PNG, 60, outputStream)
                 outputStream.close()
             }
 

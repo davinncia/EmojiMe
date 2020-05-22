@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -21,8 +22,8 @@ class MainViewModel(private val application: Application,
     private val photoMutable = MutableLiveData<Bitmap>()
     val photo: LiveData<Bitmap> = photoMutable
 
-    private val facesNbr = MutableLiveData<Int>()
-    val faces = facesNbr
+    private val emojiPhotoMutable = MutableLiveData<Bitmap>()
+    val emojiPhoto: LiveData<Bitmap> = emojiPhotoMutable
 
     private var tempPhotoPath: String? = null
 
@@ -32,9 +33,11 @@ class MainViewModel(private val application: Application,
         deleteImageFile()
         Log.d("debuglog", "DELETED")
         // Save the image
-        photo.value?.let {
+        emojiPhoto.value?.let {
             Log.d("debuglog", "SAVING...")
-            viewModelScope.launch(Dispatchers.Default) { bitmapUtils.saveImageInMediaStore(it, application) }
+            //Saving on global scope to be sure it's done
+            //GlobalScope.launch(Dispatchers.Default) {  }
+            bitmapUtils.saveImageInMediaStore(it, application)
             Log.d("debuglog", "SAVED")
         }
     }
@@ -62,9 +65,9 @@ class MainViewModel(private val application: Application,
     //--------------------------------------------------------------------------------------------//
     fun detectFaces() {
         viewModelScope.launch(Dispatchers.Default) {
-            val nbr = emojifier.detectFaces(photo.value!!)
+            val treatedPhoto = emojifier.detectFaces(photo.value!!)
             withContext(Dispatchers.Main) {
-                facesNbr.value = nbr
+                emojiPhotoMutable.value = treatedPhoto
             }
         }
     }

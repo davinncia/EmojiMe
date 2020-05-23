@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private val imageView by bind<ImageView>(R.id.iv_picture)
     private val clearFab by bind<FloatingActionButton>(R.id.clear_button)
     private val saveFab by bind<FloatingActionButton>(R.id.save_button)
+    private val progressCircle by bind<ProgressBar>(R.id.progress_circle)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +54,13 @@ class MainActivity : AppCompatActivity() {
             imageView.setImageBitmap(it)
         })
 
+        viewModel.isLoading.observe(this, Observer { loading ->
+            if (loading)
+                progressCircle.visibility = View.VISIBLE
+            else
+                progressCircle.visibility = View.GONE
+        })
+
         clearFab.setOnClickListener {
             clearImageFromView()
             // Delete the temporary image file
@@ -64,12 +73,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         checkStoragePermission()
-
     }
 
+    //--------------------------------------------------------------------------------------------//
+    //                                          C A M E R A
+    //--------------------------------------------------------------------------------------------//
     private fun launchCamera() {
-        Toast.makeText(this, "Yep", Toast.LENGTH_SHORT).show()
-
         //Creates a temporary image file and captures a picture to store in it.
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -110,6 +119,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //--------------------------------------------------------------------------------------------//
+    //                                              U I
+    //--------------------------------------------------------------------------------------------//
+
     private fun processAndSetImage() {
         // Toggle Visibility of the views
         saveFab.visibility = View.VISIBLE;
@@ -126,18 +139,6 @@ class MainActivity : AppCompatActivity() {
         clearFab.visibility = View.GONE
         saveFab.visibility = View.GONE
         checkStoragePermission() //Launches camera if granted
-    }
-
-    private fun launchShareActivity() {
-        // Create the share intent and start the share activity
-        //TODO bof
-        val imageFile = File(viewModel.getTempPhotoPath())
-        val shareIntent = Intent(Intent.ACTION_SEND)
-        shareIntent.type = "image/*"
-        val photoURI = FileProvider.getUriForFile(this, FILE_PROVIDER_AUTHORITY, imageFile)
-
-        shareIntent.putExtra(Intent.EXTRA_STREAM, photoURI)
-        this.startActivity(shareIntent)
     }
 
     //--------------------------------------------------------------------------------------------//
@@ -183,25 +184,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //--------------------------------------------------------------------------------------------//
-    //                                          M E N U
-    //--------------------------------------------------------------------------------------------//
-    //override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-    //    menuInflater.inflate(R.menu.main_menu, menu)
-    //    return super.onCreateOptionsMenu(menu)
-    //}
-//
-    //override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    //    return when(item.itemId) {
-    //        R.id.menu_item_share_main -> {
-    //            viewModel.saveImage()
-    //            launchShareActivity()
-    //            true
-    //        }
-    //        else -> super.onOptionsItemSelected(item)
-    //    }
-//
-    //}
+
 
     companion object {
         private const val STORAGE_RC = 1

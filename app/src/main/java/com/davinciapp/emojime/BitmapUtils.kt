@@ -105,7 +105,6 @@ class BitmapUtils {
             }
 
             resolver.update(uri, values, null, null)
-            Toast.makeText(application, "Saved to: $uri", Toast.LENGTH_SHORT).show()
 
         } ?: throw RuntimeException("MediaStore failed.")
 

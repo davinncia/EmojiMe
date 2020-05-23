@@ -25,29 +25,25 @@ class MainViewModel(private val application: Application,
     private val emojiPhotoMutable = MutableLiveData<Bitmap>()
     val emojiPhoto: LiveData<Bitmap> = emojiPhotoMutable
 
+    val isLoading = MutableLiveData<Boolean>()
+
     private var tempPhotoPath: String? = null
 
     fun saveImage() {
+        isLoading.value = true
         // Delete the temporary image file
-        Log.d("debuglog", "DELETING...")
         deleteImageFile()
-        Log.d("debuglog", "DELETED")
         // Save the image
         emojiPhoto.value?.let {
-            Log.d("debuglog", "SAVING...")
-            //Saving on global scope to be sure it's done
-            //GlobalScope.launch(Dispatchers.Default) {  }
-            bitmapUtils.saveImageInMediaStore(it, application)
-            Log.d("debuglog", "SAVED")
+            viewModelScope.launch { bitmapUtils.saveImageInMediaStore(it, application) }
         }
+        isLoading.value = false
     }
-
 
     fun deleteImageFile() {
         tempPhotoPath?.let { bitmapUtils.deleteImageFile(application, it) }
     }
 
-    //fun resamplePic(): Bitmap = bitmapUtils.resamplePic(application, tempPhotoPath)
     fun processPic() {
         tempPhotoPath?.let { photoMutable.value = bitmapUtils.resamplePic(application, it) }
     }
@@ -58,15 +54,16 @@ class MainViewModel(private val application: Application,
         return file
     }
 
-    fun getTempPhotoPath() = tempPhotoPath
-
     //--------------------------------------------------------------------------------------------//
     //                                       F A C E S   D E T E C T O R
     //--------------------------------------------------------------------------------------------//
     fun detectFaces() {
+        isLoading.value = true
+
         viewModelScope.launch(Dispatchers.Default) {
             val treatedPhoto = emojifier.detectFaces(photo.value!!)
             withContext(Dispatchers.Main) {
+                isLoading.value = false
                 emojiPhotoMutable.value = treatedPhoto
             }
         }
